@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --time 00:30:00 -n 1
+#SBATCH --output slurm.out
+#SBATCH --error slurm.err
+
+R="/work/upbarth/Programs/rosetta"
+
+S=""
+if [ -f span ]; then
+	S="-in:file:spanfile span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
+fi
+
+ls na??.pdb | parallel -j36 '/work/upbarth/Programs/rosetta/source/bin/FlexPepDocking.linuxgccrelease -in:file:spanfile span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres -database /work/upbarth/Programs/rosetta/database/ -flexpep_prepack -ex1 -ex2aro -suffix "_pp" -no_nstruct_label -nstruct 1 -s'

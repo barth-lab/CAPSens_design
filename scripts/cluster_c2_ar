@@ -1,0 +1,60 @@
+#!/bin/bash
+#SBATCH --time 2:00:00 -n 1
+#SBATCH --output cluster_c2.out
+#SBATCH --error cluster_c2.err
+
+set -e
+
+ROS="/work/upbarth/Programs/rosetta"
+d=`pwd`
+
+I="3ZEV_5DHG 3ZEV_5ZBH 5VAI_6NBF"
+I="????_????"
+
+W="2xfilter"
+[ ! -z $1 ] && W=$1
+
+for f in $I; do
+	[ ! -d $d/$f/cluster_c2_$W ] && continue
+	cd $d/$f/cluster_c2_$W
+
+	cl=$(ls -td cl* | head -n 1)
+	[ -z $cl ] && continue
+	[ ! -d $cl ] && continue
+
+	echo "clustering $f/$cl"
+	R=${cl#cl}
+	cd $cl
+	rm -f ./*.pdb
+	$ROS/source/bin/cluster.linuxgccrelease \
+		-database $ROS/database/  \
+		-in:file:fullatom \
+		-in:file:l ../pdbs/pdblist \
+		-cluster:radius $R \
+		-rescore:skip \
+		-cluster:population_weight 1 \
+		-cluster:sort_groups_by_energy \
+		-cluster:write_centers \
+		> clout \
+		2> clerr &
+done
+wait
+cd $d
+for f in $I; do
+	[ ! -d $d/$f/cluster_c2_$W ] && continue
+	cd $d/$f/cluster_c2_$W
+
+	cl=$(ls -td cl* | head -n 1)
+	[ -z $cl ] && continue
+	[ ! -d $cl ] && continue
+
+	echo "linking $f/$cl"
+	cd $cl
+	for p in `cat ../pdbs/pdblist`; do
+		link=`grep $p clout | tail -n 1 | awk '{print "c."$4"."$5".pdb"}'`
+		if [[ -f $link ]]; then
+			rm $link
+		fi
+		ln -s $p $link
+	done
+done

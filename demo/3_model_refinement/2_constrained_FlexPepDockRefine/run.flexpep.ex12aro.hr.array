@@ -1,0 +1,59 @@
+#!/bin/bash
+#SBATCH --time 14:20:00 -n 1
+#SBATCH --array=1-2
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=36
+#SBATCH --output slurm.out
+#SBATCH --error slurm.err
+
+echo STARTING AT `date`
+
+R="/work/upbarth/Programs/rosetta/"
+O=out.highres.${1/.pdb/}
+
+if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
+then
+	D=`date +"%s"`
+	mv $O $O.$D
+	mkdir $O
+else
+        sleep 10
+fi
+
+declare -a commands
+
+for i in {1..2}
+do
+    printf -v si "%02d" $((i-1))
+    commands[$i]=""
+    for j in {1..36}; do
+        printf -v sj "%02d" $j
+        commands[$i]="${commands[$i]}
+            $R/source/bin/FlexPepDocking.linuxgccrelease \
+            -database $R/database/ \
+            -pep_refine \
+            -ex1 \
+            -ex2 \
+            -ex1aro \
+            -ex2aro \
+            -use_input_sc \
+            -s input/$1 \
+            -out:path:all $O \
+            -out:file:silent out.${1/.pdb/} \
+            -out:suffix _${si}_$sj \
+            -out:nstruct 140 \
+            -seed_offset $$ \
+            -in:file:spanfile input/CXCR4-SDF1_eq.span \
+            -membrane:Membed_init \
+            -membrane::Mhbond_depth \
+            -score:weights membrane_highres \
+            > $O/log_${si}_$sj \
+            2> $O/err_${si}_$sj &"
+    done
+    commands[$i]="${commands[$i]}
+        wait"
+done
+
+bash -c "${commands[${SLURM_ARRAY_TASK_ID}]}"
+
+echo FINISHED at `date`

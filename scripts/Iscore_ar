@@ -1,0 +1,31 @@
+#!/bin/bash
+#SBATCH --time 48:00:00 -n 1
+#SBATCH --output slurm.out
+#SBATCH --error slurm.err
+
+R="/work/upbarth/Programs/rosetta"
+d=`pwd`
+
+for f in 3ZEV_5DHG 4RWS_6GPX 4XT1_6GPX 4RWS_6LFL 5GLH_4GRV 5VAI_5YQZ; do
+	echo $d/$f
+	cd $d/$f/output_loop
+	O=pdbs
+
+	if [ -d "$O" ]; then
+		D=`date -r $O +"%F_%T"`
+		mv $O $O.$D
+	fi
+	mkdir $O
+	cd $O 
+
+	S=""
+	if [ -f ../../input_loop/span ]; then
+		S="-in:file:spanfile ../../input_loop/span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
+	fi
+
+	ls ../*.pdb > ../pdblist
+
+	#$R/source/bin/FlexPepDocking.linuxgccrelease -database $R/database -in:file:silent ../out.silent -out:pdb -flexpep_score_only -no_nstruct_label -silent_read_through_errors > out 2> eout &
+	$R/source/bin/FlexPepDocking.linuxgccrelease -database $R/database -in:file:list ../pdblist -native ../../input_loop/native.pdb -out:pdb -flexpep_score_only -no_nstruct_label $S > out 2> eout &
+done
+wait

@@ -1,0 +1,69 @@
+for f in ????_????; do
+(
+echo $f
+cd $f/input_flex_c2
+i=0                                             
+for p in `awk '{sub("../pdbs/", "", $NF); print $NF}' tags`; do
+	cp /scratch/fueglist/Homology/$f/output_loop/pdbs/$p cl$(printf "%02d" $i).pdb
+	i=$((i+1))
+	done
+)
+done
+
+#Clustering of top10% structures, extract all residues within 15A
+for f in ????_????; do
+(
+	echo $f
+	for p in `tail -n +3 stats/"$f"_c2 | sort -nk4 | head -n 1440 | awk '{print $NF}'`; do
+		extract -cA -r `cat $f/input_flex/15A` /scratch/fueglist/Homology/$f/output_flex_c2/$p > /scratch/fueglist/Homology/$f/cluster_c2/pdbs/$p
+	done
+)
+done
+
+#rename symlinks
+for f in ????_????/input*; do
+(
+	echo $f
+	cd $f
+	for l in $(find . -xtype l); do
+		ln -sf ../input_flex/${l#./} .
+	done
+)
+done
+
+#extracting alignment from hhr-file
+for f in 3ZEV_5DHG 4XT1_6GPX 5GLH_4GRV 5VAI_5YQZ 6JOD_5VBL 6OMM_6C1R; do
+(
+	cd $f/input_flex
+	n=${f%_*}
+	t=${f#*_}
+	echo $n $t
+	echo ">$n" $f.hhr > "$n"_$t.aln
+	grep "Q $n" $f.hhr | awk '{print $4}' >> "$n"_$t.aln
+	echo ">$t" >> "$n"_$t.aln
+	grep "T $t" $f.hhr | awk '{print $4}' >> "$n"_$t.aln
+)
+done
+
+# get number-of-column = column-name
+keys() {
+	        head -n 1 $1 | awk '{for (i = 1; i <= NF; i++) printf "%2d %s\n", i, $i}'
+}
+
+awk '/^#BEGIN_POSE_ENERGIES_TABLE/,/#END_POSE_ENERGIES_TABLE/ {print $1}' native.pdb | tail -n +2 | keys
+
+awk '/^#BEGIN_POSE_ENERGIES_TABLE/,/#END_POSE_ENERGIES_TABLE/ {printf "%8.2f %8.2f %s\n", $12, $13, $1}' $f | tail -n +2 | head -n -1 | less
+
+awk '/CtermProteinFull/,/#END_POSE_ENERGIES_TABLE/ {if (NR > 1) tot += $12 + $13} END {printf "%8.2f\n", tot}' $f 
+
+#extract residues and peptide of 20% best structures
+for f in ????_????; do
+(
+        echo $f
+        for p in `tail -n +3 stats/"$f"_c2_hbond | sort -nk4 | head -n 1440 | awk '{print $NF}'`; do
+		extract -cA -r `cat $f/input_flex/8A` /scratch/fueglist/Homology/$f/output_flex_c2/$p | head -n -1 > $f/cluster_c2_filter/pdbs/$p
+		extract -cB /scratch/fueglist/Homology/$f/output_flex_c2/$p | head -n -1 >> $f/cluster_c2_filter/pdbs/$p
+	done
+)
+done
+

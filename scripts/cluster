@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --time 00:30:00 -n 1
+#SBATCH --output slurm.out
+#SBATCH --error slurm.err
+#SBATCH --mem 48G
+
+R="/work/upbarth/Programs/rosetta/"
+
+time $R/source/bin/cluster.linuxgccrelease \
+	-database $R/database/  \
+	-in:file:fullatom \
+	-in:file:l $1 \
+	-cluster:radius $2 \
+	-rescore:skip \
+	-cluster:population_weight 1 \
+	-cluster:sort_groups_by_energy \
+	-cluster:write_centers \
+	> clout \
+	2> clerr
+
+for p in `cat $1`; do
+	link=`grep $p clout | tail -n 1 | awk '{print "c."$4"."$5".pdb"}'`
+	if [[ -f $link ]]; then
+		rm $link
+	fi
+	ln -s $p $link
+done
+
+#SBATCH --partition=serial
