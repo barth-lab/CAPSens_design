@@ -8,7 +8,7 @@ echo STARTING AT `date`
 
 R="/home/jefferso/Git/rosetta"
 
-N="$1".lm.XF_SScst
+N="$1".lm.TM_SScst
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
 then
@@ -26,7 +26,7 @@ do
 	printf -v s "%03d" $i
 	commands[$i]="$R/source/bin/loopmodel.linuxgccrelease \
 	-database $R/database/  \
-        -in:file:s diverse/diverse_0$s.pdb \
+        -in:file:s input/diverse/diverse_0$s.pdb \
 	-out:path:all output.$N \
 	-out:file:silent out_$s.silent \
 	-out:suffix _$s \

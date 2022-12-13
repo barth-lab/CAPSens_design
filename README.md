@@ -2,6 +2,8 @@
 
 This repository describes methods and provides examples for modeling receptor:peptide complexes and performing subsequent computational design and model refinement.
 
+Read the paper: [Jefferson RE et al, 2022](https://doi.org/10.1101/2022.03.30.486413)
+
 Requirements:
 
 * [Python3](https://www.python.org/downloads/)
@@ -14,7 +16,7 @@ export ROS=<path_to_rosetta>
 export CAPSen_scripts=<path_to_scripts>
 ```
 
-Read the paper: [Jefferson RE et al, 2022](https://doi.org/10.1101/2022.03.30.486413)
+Many of the demo scripts work with the SLURM batch system for a high-performance computing cluster. You may need to modify them to work with your cluster.
 
 # Receptor:Peptide Complex Modeling
 
@@ -53,7 +55,9 @@ In the case of CXCR4, the US28 active-state structure was complexed with the CX3
 
 ## 2. Flexible peptide docking and diversification
 
-The peptide is translated and rotated across the binding pocket to saturate all possible binding modes. From these initial positions, the peptide ligand is docked with all degrees of flexibility and receptor repacking allowed at the interface. Optionally, experimentally informed constraints can be applied in this step fto favor putative interfacial contacts. The top-scoring decoys are filtered and diversified to select many different peptide poses by position, shape, and orientation. 200-220 unique peptide conformations are taken as inputs for the next step.
+The peptide is translated and rotated across the binding pocket to saturate all possible binding modes. From these initial positions, the peptide ligand is docked with all degrees of flexibility and receptor repacking allowed at the interface. Optionally, experimentally informed constraints can be applied in this step to favor putative interfacial contacts. The top-scoring decoys are filtered and diversified to select many different peptide poses by position, shape, and orientation. 200-220 unique peptide conformations are taken as inputs for the next step.
+
+The constraint sets used for CXCR4:CXCL12 modeling are in `demo/1_receptor-peptide_modeling/1_peptide_docking/input` and can be added as a command line argument to the flexpepdock run script.
 
 The `pep_grid.py` script generates inputs for flexible peptide docking by translating and rotating the peptide across the receptor binding pocket. You will probably want to adjust parameters for your particular system.
 
@@ -71,20 +75,15 @@ for n in {0..116}; do
 done
 ```
 
-Alternately, you can modify the `prepack_arr.slurm` script if you have a SLURM batch system.
-```
-$CAPSen_scripts/prepack_arr.slurm
-```
-
 Example pre-packed inputs are available in `demo/1_receptor-peptide_modeling/1_peptide_docking/input/grid`.
 
-With the prepacked inputs, you are ready to start a production run of peptide docking. We recommend generating ~10,000 total decoys. The following generates 100 decoys per starting input peptide position.
+With the prepacked inputs, you are ready to start a production run of peptide docking. We recommend generating ~10,000 total decoys. The following generates 100 decoys per starting input peptide position to give 11,600 total decoys.
 ```
 cd 1_receptor-peptide_modeling/1_peptide_docking
 mkdir output
 for n in {0..116}; do
     printf -v sn "%03d" $n
-    $ROS/source/bin/FlexPepDocking.linuxgccrelease -in:file:spanfile input/span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres -database $ROS/database/ -s input/grid/${sn}_pp.pdb -native -pep_refine -ex1 -ex2aro -use_input_sc seed_offset $$ -nstruct 100 -out:path:all output -out:suffix _$sn -out:file:silent out_${sn}.silent > output/log_$sn 2> output/err_$sn &
+    sbatch run.flexpep.cst.lr.hr.array $sn.pdb <constraint_set>
 done
 ```
 
@@ -97,28 +96,59 @@ The `pepstat.sh` script will generate all the geometric statistics that are used
 ```
 cd output
 cat out_{020..116}.silent >> out.silent
-$ROS/source/bin/extract_pdbs.linuxgccrelease -database $ROS/database/ -in:file:silent out.silent
+mkdir pdbs
+cd pdbs
+$ROS/source/bin/extract_pdbs.linuxgccrelease -database $ROS/database/ -in:file:silent ../out.silent
+cd ..
 $CAPSen_scripts/pepstat.sh pdbs > pepstat.sc
 ```
 
-The diversify script will filter the resulting peptide poses by 
+The diversify script will filter the resulting peptide poses by the combined interface and peptide scores from flexpepdock (literally rosetta score terms I_sc + pep_sc), taking the top 20 % and diversifying poses by position, rotation, and shape.
 ```
 diversify pepstat.sc > tags
+mkdir ../../2_loop_relax/input/diverse
+for t in $(grep -v "^#" tags); do
+    cp pdbs/$t.pdb ../../2_loop_relax/input/diverse
+done
 ```
 
 ## 3. Loop modeling and structure relaxation
 
-Missing receptor loop residues are rebuilt _de novo_ around each diversified peptide pose and the receptor:peptide complexes are relaxed to simulate induced fit effects. Inter-TM constraints derived from sequence conservation are applied to restrain receptor structure. Any additional experimentally informed constraints used in peptide docking (step 2) can be applied again to preserve putative interfacial contacts during the full structure relax.
+Missing receptor loop residues are rebuilt _de novo_ around each diversified peptide pose and the receptor:peptide complexes are relaxed to simulate induced fit effects. Inter-TM constraints derived from sequence conservation are applied to restrain receptor structure. Any additional experimentally informed constraints used in peptide docking (step 2) can be applied again to preserve putative interfacial contacts during the full structure relax. To apply additional constraints append to your constraint files and adjust the flags file as needed. We recommend generating ~20,000 decoys for a production run of loop modeling and full complex relax. The following will generate 200 decoys for 100 diverse inputs to give 20,000 total decoys. The script uses CCD loop closure, but other [loop modeling](https://new.rosettacommons.org/demos/latest/tutorials/loop_modeling/loop_modeling) methods may be available to you.
 
-The 10 % top-scoring decoys are clustered by structural similarity. Representative models from clusters of sufficient size were analyzed for total score, buried surface area, interface score, peptide score, and key contacts with residues known to be important for receptor activation.
+```
+for i in {1..100}; do
+    sbatch run.loops.array
+done
+```
+
+The 10 % top-scoring decoys (~2000 structures) are clustered by structural similarity. Representative models from clusters of sufficient size (>30 members for modeling of CXCR4:CXCL12) should be analyzed for total score, buried surface area, interface score, peptide score, and key contacts with residues known to be important for receptor activation. For the CXCR4:CXCL12 complex models, because the 2 N-terminal residues of CXCL12 have been shown to be essential for activity, clusters that did not display any contacts between K1 or P2 to key receptor residues known to be important for activity were not considered.
 
 # Computational Design
 
-Combinatorial mutagenesis using flexible backbone repacking.
+## Combinatorial mutagenesis
 
-If you have the means, it may be advantageous to test a small rational library of point mutants of receptor residues that have any heteroatom within 4 A of all selected peptide models.
+Designable sites are identified on both the peptide and receptor sides of the different binding interfaces featured in the initial set of models. Novel combination of amino-acids and conformations are searched concurrently for improving receptor:peptide association and signaling response. The *in silico* mutagenesis allows all possible residue substitutions at designable sites. All residues with heteroatoms within 5.0 A of any designable residue are repacked and their backbone and side-chain minimized. Typically 200 independent trajectories are sufficient to have convergence in the top 10 % of models. Top-scoring combinations of mutations should be selected for interface energy improvement and active-state stabilization.
+
+The demo inputs allow design at three positions in CXCR4. To run the demo simulation:
+```
+cd demo/2_design
+sbatch sim_EnsembleState1_WT_rpk_N11A-Y19A-S259A.sh
+```
+
+## Computationally guided point mutant library
+
+If you have the means, it may be advantageous to experimentally test a small rational library of point mutants of receptor residues that make contact with the peptide ligand (any heteroatom within 4 A of all selected peptide models) and whose substitutions do not have significant clashes (>5 REU) in a fraction of the selected ensemble of models. Due the dynamic nature of receptor:peptide interactions, these point mutants may have significant effects on activity that are difficult to predict from single-state design.
 
 # Model Refinement
 
-The models that best reflect experimentally validated shifts in activity are re-docked in mutational contexts to explore receptor:peptide interactions that may not have been fully sampled in the modeling of the native WT complex. A single constraint was used to anchor a key electrostatic interaction in the depth of the binding pocket.
+The models that best reflect experimentally validated shifts in activity are re-docked in mutational contexts to explore receptor:peptide interactions that may not have been fully sampled in the modeling of the native WT complex. As potency is largely connected to affinity between the receptor and peptide ligand, the models that best supported changes in potency by predicted interface score can be selected as starting inputs for refinement.
 
+In the case of CXCR4:CXCL12, a single constraint was used to anchor a key electrostatic interaction in the depth of the binding pocket. The demo redocks the V3Y variant peptide onto Cdyn. To fully explore the possible landscape in the mutant context, one should prep inputs with `pep_grid.py` and prepack before a production run.
+
+```
+cd demo/3_model_refinement
+sbatch run.flexpep.ex12aro.cst.lr.hr.array CXCR4-SDF1.4xt1_TM2-ECL2.4rws_c7.1_eq_rpk_L15I-H87N-S152A-V280Y_pp.pdb CXCR4-SDF1_E262-K278
+```
+
+Output decoys can be clustered and selected as before, before being repacked into other mutational contexts for which there is experimental validation to again screen models that best support the observed signaling effects.

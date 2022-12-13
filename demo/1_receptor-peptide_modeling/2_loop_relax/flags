@@ -11,13 +11,8 @@
 
 -loops:remodel  quick_ccd
 -loops:relax    fastrelax
-#-loops:refine  refine_ccd
 -loops:random_order
 -loops:idealize_before_loop_close
-
-#-in:detect_disulf true
-#-in:fix_disulf input/CXCR4.disulfide
-#-fail_on_bad_hbond false
 
 -cst_file input/CXCR4_from_4XT1_alt_SSBOND.cst
 -cst_weight 1.0

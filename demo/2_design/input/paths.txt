@@ -1,0 +1,25 @@
+Rosetta Input/Output Paths (order essential)
+path is first '/', './',or  '../' to next whitespace, must end with '/'
+INPUT PATHS:
+pdb1                            input/
+pdb2                            input/
+membrane spanning regions       input/
+alternate data files            Rosetta_Intel/rosetta_database/
+fragments                       input/
+structure dssp,ssa (dat,jones)  input/
+sequence fasta,dat,jones        input/
+constraints                     input/
+starting structure              input/
+data files                      Rosetta_Intel/rosetta_database/
+OUTPUT PATHS:
+movie                           ./
+pdb path                        ./
+score                           ./
+status                          ./
+user                            ./
+FRAGMENTS: (use '*****' in place of pdb name and chain)
+2                                      number of valid fragment files
+3                                      frag file 1 size
+aa*****03_05.200_v1_3                                name
+9                                      frag file 2 size
+aa*****09_05.200_v1_3                                name
