@@ -32,7 +32,7 @@ How to set up each step will depend on your specific target receptor:peptide com
 
 ### Homologous template selection
 
-Because active-state structures of membrane receptors is not always available, this method uses a homology modeling approach to generate possible scaffolds. We use [HHpred](https://toolkit.tuebingen.mpg.de/tools/hhpred) to identify homologous template structures. Homologous templates should share at least 20% sequence identity. Keep in mind that alignments may need to be manually adjusted to fix local mismatches, especially around intra-receptor disulfide bonds. The native sequence can be threaded onto the homologous template using Step 1 of the [RosettaCM protocol](https://www.rosettacommons.org/docs/latest/application_documentation/structure_prediction/RosettaCM). This uses the grishin alignment format and Rosetta's partial_thread binary.
+Because active-state structures of membrane receptors are not always available, this method uses a homology modeling approach to generate possible scaffolds. We use [HHpred](https://toolkit.tuebingen.mpg.de/tools/hhpred) to identify homologous template structures. Homologous templates should share at least 20% sequence identity. Keep in mind that alignments may need to be manually adjusted to fix local mismatches, especially around intra-receptor disulfide bonds. The native sequence can be threaded onto the homologous template using Step 1 of the [RosettaCM protocol](https://www.rosettacommons.org/docs/latest/application_documentation/structure_prediction/RosettaCM). This uses the grishin alignment format and Rosetta's partial_thread binary.
 
 ### Hybridization
 
@@ -126,7 +126,7 @@ The 10 % top-scoring decoys (~2000 structures) are clustered by structural simil
 
 # Computational Design
 
-## Combinatorial mutagenesis
+## Computational design by conformational selection
 
 Designable sites are identified on both the peptide and receptor sides of the different binding interfaces featured in the initial set of models. Novel combination of amino-acids and conformations are searched concurrently for improving receptor:peptide association and signaling response. The *in silico* mutagenesis allows all possible residue substitutions at designable sites. All residues with heteroatoms within 5.0 A of any designable residue are repacked and their backbone and side-chain minimized. Typically 200 independent trajectories are sufficient to have convergence in the top 10 % of models. Top-scoring combinations of mutations should be selected for interface energy improvement and active-state stabilization.
 
@@ -136,9 +136,9 @@ cd demo/2_design
 sbatch sim_EnsembleState1_WT_rpk_N11A-Y19A-S259A.sh
 ```
 
-## Computationally guided point mutant library
+## Computational design maintaining conformational dynamism
 
-If you have the means, it may be advantageous to experimentally test a small rational library of point mutants of receptor residues that make contact with the peptide ligand (any heteroatom within 4 A of all selected peptide models) and whose substitutions do not have significant clashes (>5 REU) in a fraction of the selected ensemble of models. Due the dynamic nature of receptor:peptide interactions, these point mutants may have significant effects on activity that are difficult to predict from single-state design.
+Here, binding contact networks are selected that enhance receptor:peptide interactions in several CXCR4:CXCL12 models, thereby favoring multiple conformations of the complex and maintaining high levels of conformational entropy. This is achieved by designing a library of point mutations at receptor positions in contact with the peptide that are compatible with multiple conformations of the complex. Specifically, we computationally build a small library of point mutants of receptor residues that make contact with the peptide ligand (any heteroatom within 4 A of all selected peptide models) and whose substitutions do not have significant clashes (>5 REU) in a fraction of the selected ensemble of models. Due the dynamic nature of receptor:peptide interactions, these point mutants may have significant effects on activity that are difficult to predict from single-state design.
 
 # Model Refinement
 
