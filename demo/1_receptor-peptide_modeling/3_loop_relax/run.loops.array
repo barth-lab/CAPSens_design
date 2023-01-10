@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --time 45:00:00 -n 1
+#SBATCH --time 48:00:00 -n 1
 #SBATCH --array=1-100
 #SBATCH --output slurm.out
 #SBATCH --error slurm.err
 
 echo STARTING AT `date`
 
-R="/home/jefferso/Git/rosetta"
+R="/work/upbarth/Programs/rosetta"
 
 N="$1".lm.TM_SScst
 

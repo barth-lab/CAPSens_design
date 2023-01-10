@@ -43,7 +43,7 @@ In the case of CXCR4, the active-state template US28 (PDB ID: 4XT1) was used wit
 The `compose.py` script assembles hybrid scaffolds from donor and host pdbs. The example takes the extracellular head and ECL2 of CXCR4 (PDB ID: 4RWS) and places them into the homology template based on US28 (PDB ID: 4XT1).
 
 ```
-cd 1_receptor-peptide_modeling/0_scaffold_hybridization/
+cd demo/1_receptor-peptide_modeling/1_scaffold_hybridization/
 $CAPSen_scripts/compose.py -d input/donor.pdb -f input/composition_file input/host.pdb >CXCR4.TM2-ECL2_4xt1_template.pdb
 ```
 
@@ -62,7 +62,7 @@ The constraint sets used for CXCR4:CXCL12 modeling are in `demo/1_receptor-pepti
 The `pep_grid.py` script generates inputs for flexible peptide docking by translating and rotating the peptide across the receptor binding pocket. You will probably want to adjust parameters for your particular system.
 
 ```
-cd 1_receptor-peptide_modeling/1_peptide_docking/prep
+cd demo/1_receptor-peptide_modeling/2_peptide_docking/prep
 $CAPSen_scripts/pep_grid.py CXCR4-CXCL12_TM2.ECL2_hybrid.pdb
 ```
 
@@ -75,11 +75,11 @@ for n in {0..116}; do
 done
 ```
 
-Example pre-packed inputs are available in `demo/1_receptor-peptide_modeling/1_peptide_docking/input/grid`.
+Example pre-packed inputs are available in `demo/1_receptor-peptide_modeling/2_peptide_docking/input/grid`.
 
 With the prepacked inputs, you are ready to start a production run of peptide docking. We recommend generating ~10,000 total decoys. The following generates 100 decoys per starting input peptide position to give 11,600 total decoys.
 ```
-cd 1_receptor-peptide_modeling/1_peptide_docking
+cd demo/1_receptor-peptide_modeling/2_peptide_docking
 mkdir output
 for n in {0..116}; do
     printf -v sn "%03d" $n
@@ -89,7 +89,7 @@ done
 
 Alternately, you can modify the `flex_ar.slurm` script if you have a SLURM batch system.
 ```
-$CAPSen_scripts/flex_arr.slurm
+$CAPSen_scripts/flex_ar.slurm
 ```
 
 The `pepstat.sh` script will generate all the geometric statistics that are used for diversification of the peptide poses. Note that `pepstat.sh` uses `geometry` from the [biophysics](https://github.com/barth-lab/biophysics) repo and calculates metrics from pdbs, so you will need a large temporary scratch space to extract pdbs from the silent output of flexpepdock.
@@ -105,7 +105,7 @@ $CAPSen_scripts/pepstat.sh pdbs > pepstat.sc
 
 The diversify script will filter the resulting peptide poses by the combined interface and peptide scores from flexpepdock (literally rosetta score terms I_sc + pep_sc), taking the top 20 % and diversifying poses by position, rotation, and shape.
 ```
-diversify pepstat.sc > tags
+$CAPSen_scripts/diversify_cycle.py pepstat.sc > tags
 mkdir ../../2_loop_relax/input/diverse
 for t in $(grep -v "^#" tags); do
     cp pdbs/$t.pdb ../../2_loop_relax/input/diverse
@@ -117,9 +117,15 @@ done
 Missing receptor loop residues are rebuilt _de novo_ around each diversified peptide pose and the receptor:peptide complexes are relaxed to simulate induced fit effects. Inter-TM constraints derived from sequence conservation are applied to restrain receptor structure. Any additional experimentally informed constraints used in peptide docking (step 2) can be applied again to preserve putative interfacial contacts during the full structure relax. To apply additional constraints append to your constraint files and adjust the flags file as needed. We recommend generating ~20,000 decoys for a production run of loop modeling and full complex relax. The following will generate 200 decoys for 100 diverse inputs to give 20,000 total decoys. The script uses CCD loop closure, but other [loop modeling](https://new.rosettacommons.org/demos/latest/tutorials/loop_modeling/loop_modeling) methods may be available to you.
 
 ```
+cd demo/1_receptor-peptide_modeling/3_loop_relax
 for i in {1..100}; do
     sbatch run.loops.array
 done
+```
+
+Alternately, you can modify the `loop_ar.slurm` script if you have a SLURM batch system.
+```
+$CAPSen_scripts/loop_ar.slurm
 ```
 
 The 10 % top-scoring decoys (~2000 structures) are clustered by structural similarity. Representative models from clusters of sufficient size (>30 members for modeling of CXCR4:CXCL12) should be analyzed for total score, buried surface area, interface score, peptide score, and key contacts with residues known to be important for receptor activation. For the CXCR4:CXCL12 complex models, because the 2 N-terminal residues of CXCL12 have been shown to be essential for activity, clusters that did not display any contacts between K1 or P2 to key receptor residues known to be important for activity were not considered.

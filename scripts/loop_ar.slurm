@@ -10,7 +10,7 @@ R="/work/upbarth/Programs/rosetta"
 
 #O=output_loop_diverse_relax_movemap
 O=output_loop
-I=input_loop
+I=input
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
 then
