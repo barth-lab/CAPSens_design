@@ -6,7 +6,7 @@
 
 echo STARTING AT `date`
 
-R="/home/jefferso/Git/rosetta"
+R="/work/upbarth/Programs/rosetta"
 N="$1"."$2".cst.lr.hr
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]

@@ -8,7 +8,7 @@
 
 R="/work/upbarth/Programs/rosetta"
 
-I=input_flex
+I=input
 O=output_flex
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
@@ -21,7 +21,7 @@ else
 fi
 
 S=""
-if [ -f $I/span ]; then
+if [ -f $I/CXCR4_SDF1.span ]; then
 	S="-in:file:spanfile $I/span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
 fi
 
@@ -37,7 +37,6 @@ do
 			$R/source/bin/FlexPepDocking.linuxgccrelease  $S \
 			-database $R/database/  \
 			-s $I/grid/${sn}_pp.pdb \
-			-native $I/native_noloops_GLY.pdb \
 			-pep_refine \
 			-ex1 -ex2aro -use_input_sc \
 			-constant_seed \
