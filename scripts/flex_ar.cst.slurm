@@ -9,7 +9,7 @@
 R="/work/upbarth/Programs/rosetta"
 
 I=input
-O=output_flex
+O=output_flex.$2
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
 then
@@ -22,7 +22,7 @@ fi
 
 S=""
 if [ -f $I/CXCR4_SDF1.span ]; then
-	S="-in:file:spanfile $I/span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
+	S="-in:file:spanfile $I/CXCR4_SDF1.span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
 fi
 
 declare -a commands
@@ -41,6 +41,10 @@ do
 			-pep_refine \
 			-ex1 -ex2aro -use_input_sc \
 			-seed_offset $$ \
+			-constraints:cst_file input/$2.constraints \
+			-constraints:cst_fa_file input/$2.constraints \
+			-constraints:cst_weight 1.0 \
+			-constraints:cst_fa_weight 1.0 \
 			-nstruct 100 \
 			-out:path:all $O \
 			-out:suffix _$sn \

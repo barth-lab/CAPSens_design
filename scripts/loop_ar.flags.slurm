@@ -39,21 +39,10 @@ do
 		commands[$i]="${commands[$i]}
 		$R/source/bin/loopmodel.linuxgccrelease $S \
 		-database $R/database/  \
-		-in:file:s $I/$sn.pdb \
-		-native $I/native.pdb \
-		-loop_file $I/loopfile  \
-		-loops:frag_sizes 9 3 \
-		-loops:frag_files $I/09.frags $I/03.frags \
-		-loops:remodel quick_ccd \
-		-loops:refine no \
-		-loops:relax relax \
-		-constraints:cst_weight 1.0 \
-		-constraints:cst_file $I/cst \
-		-constraints:cst_fa_weight 1.0 \
-		-constraints:cst_fa_file $I/cst_fa \
-		-constant_seed \
-		-seed_offset $n \
-		-nstruct 50 \
+		-in:file:s $I/diverse/diverse_$sn.pdb \
+		-seed_offset $$ \
+		-nstruct 100 \
+		\@flags \
 		-out:path:all $O \
 		-out:suffix _$sn \
 		`#-out:file:silent out_${sn}.silent `\
