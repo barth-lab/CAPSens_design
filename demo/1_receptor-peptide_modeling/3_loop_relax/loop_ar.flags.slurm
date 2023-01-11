@@ -24,8 +24,8 @@ else
 fi
 
 S=""
-if [ -f $I/span ]; then
-	S="-in:file:spanfile $I/span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
+if [ -f $I/*.span ]; then
+	S="-in:file:spanfile $I/CXCR4_SDF1.span -membrane:Membed_init -membrane::Mhbond_depth -score:weights membrane_highres"
 fi
 
 declare -a commands
@@ -38,14 +38,14 @@ do
 		printf -v sn "%03d" $n
 		commands[$i]="${commands[$i]}
 		$R/source/bin/loopmodel.linuxgccrelease $S \
-		-database $R/database/  \
+		-database $R/database/ \
 		-in:file:s $I/diverse/diverse_$sn.pdb \
 		-seed_offset $$ \
 		-nstruct 100 \
 		\@flags \
 		-out:path:all $O \
 		-out:suffix _$sn \
-		`#-out:file:silent out_${sn}.silent `\
+		-out:file:silent out_${sn}.silent \
 		> $O/log_$sn \
 		2> $O/err_$sn &"
 	done
