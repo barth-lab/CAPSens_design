@@ -9,7 +9,7 @@
 R="/work/upbarth/Programs/rosetta"
 
 I=input
-O=output_flex.71CG_299OG.covar
+O=output_flex.$2
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
 then
@@ -41,8 +41,8 @@ do
 			-pep_refine \
 			-ex1 -ex2aro -use_input_sc \
 			-seed_offset $$ \
-			-constraints:cst_file input/71CG_299OG.covar.constraints \
-			-constraints:cst_fa_file input/71CG_299OG.covar.constraints \
+			-constraints:cst_file input/$2.constraints \
+			-constraints:cst_fa_file input/$2.constraints \
 			-constraints:cst_weight 1.0 \
 			-constraints:cst_fa_weight 1.0 \
 			-nstruct 100 \

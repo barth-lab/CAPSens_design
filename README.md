@@ -101,9 +101,9 @@ The diversify script will filter the resulting peptide poses by the combined int
 
 ```
 $CAPSen_scripts/diversify_cycle.py pepstat.sc > tags
-mkdir ../../2_loop_relax/input/diverse
+mkdir ../../3_loop_relax/input/diverse
 i=0; for t in $(grep -v "^#" tags); do
-    cp pdbs/$t.pdb ../../2_loop_relax/input/diverse/diverse_$(printf "%03d" $i).pdb
+    cp pdbs/$t.pdb ../../3_loop_relax/input/diverse/diverse_$(printf "%03d" $i).pdb
     i=$((i+1))
 done
 ```
