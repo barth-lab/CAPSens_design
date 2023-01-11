@@ -19,26 +19,26 @@ if __name__ == "__main__":
                         help="Score file")
 
     args  = parser.parse_args()
-    f    = np.loadtxt(args.file, usecols=tuple(range(19))) #pep_stat.sc output? no tag column
+    f    = np.loadtxt(args.file, usecols=tuple(range(19))) 
     print("# Total number of Structures", len(f[..., 0]))
 
     # Get rid of NaN (not a number), pep stats undetermined
-    f  = f[~np.any(np.isnan(f), axis=1)]                          # what is 'axis'?
-    print("# Total number of non-nan Structures", len(f[..., 0])) # NaN values in pep_stat.sc?
+    f  = f[~np.any(np.isnan(f), axis=1)]                          
+    print("# Total number of non-nan Structures", len(f[..., 0])) 
 
     # Initial Bin sizes
     Nbin = 10
     
     s  = f[..., 2]      # I_sc + pep_sc, 3rd col of pep_stat
-    c  = f[..., 3:6]    # Center of Mass? com1, com2, com3
-    w  = f[..., 6:9]    # eigenvalues? w1, w2, w3
+    c  = f[..., 3:6]    # Center of Mass com1, com2, com3
+    w  = f[..., 6:9]    # eigenvalues w1, w2, w3
 
     # Filter factor (times standard deviation)
     ff = 3
 
     top = int(0.2*len(s))              # top X % of scores
     ms = np.median(s)                  # median score
-    ss = np.std(s)                     # score s.d., not used?
+    ss = np.std(s)                     # score s.d.
     s_sort = s[np.argsort(s)]          # sort by scores to filter top X %
     #print("Score-sorted array:", s)
     ii = np.where(s <= s_sort[top])[0] # filter score <= 'top' score
@@ -59,15 +59,15 @@ if __name__ == "__main__":
         ma = np.mean(aa[i][ii], axis=0)                                          # mean
         aa[i] -= ma                                                              # deviation from mean
 
-    na = np.sqrt(aa[0]**2 + aa[1]**2 + aa[2]**2)                    # sd across 3 principle axes, list?
-    sa = np.std(na)                                                 # sd across all angles?
+    na = np.sqrt(aa[0]**2 + aa[1]**2 + aa[2]**2)                    # sd across 3 principle axes
+    sa = np.std(na)                                                 # sd across all angles
     ii = ii[np.where(na[ii] < ff*sa)[0]]                            # subset of angles less than 3*sd filter factor
     print("# Filtering angle      < %6.3f -> %6i"%(ff*sa, len(ii))) # sd of angles * filter factor, number of decoys within filter of angle and score
 
     #COM
     mc = np.mean(c[ii], axis=0)                                     # mean COM of angle-filtered decoys
     c -= mc                                                         # deviation from mean COM
-    nc = np.linalg.norm(c, axis=1)                                  # normalize?
+    nc = np.linalg.norm(c, axis=1)                                  # normalize
     sc = np.std(nc)                                                 # sd of COM
     ii = ii[np.where(nc[ii] < ff*sc)[0]]                            # subset of COM less than 3*sd filter factor
     print("# Filtering COM        < %6.3f -> %6i"%(ff*sc, len(ii))) # sd of COM * filter factor, number of decoys within filter of COM, and angle/score
@@ -108,9 +108,9 @@ if __name__ == "__main__":
 
 ##### 1st binning, CoM
         for n in range(10):
-            gi = np.array([ii[0]], dtype=int)                                 # add top-scoring decoy to diversified subset?
+            gi = np.array([ii[0]], dtype=int)                                 # add top-scoring decoy to diversified subset
             for i in ii[1:]:                                                  # for every filtered decoy
-                nc = np.linalg.norm(c[gi] - c[i], axis=1)                     # sd angle / sd COM?
+                nc = np.linalg.norm(c[gi] - c[i], axis=1)                     # sd angle / sd COM
                 t  = np.sqrt(nc*nc)                                           # "radius" of difference between two decoys for all features
                 if not np.any(t < R):
                     gi = np.append(gi, i)                                     # t>R, then decoy added to diversified subset
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
 ##### 2nd binning, shape
         for n in range(10):
-            gi = np.array([ii[0]], dtype=int)                                 # add top-scoring decoy to diversified subset?
+            gi = np.array([ii[0]], dtype=int)                                 # add top-scoring decoy to diversified subset
             for i in ii[1:]:                                                  # for every filtered decoy
                 nw = np.linalg.norm(w[gi] - w[i], axis=1)                     # eigenvalue comparison
                 t  = np.sqrt(nw*nw)                                           # "radius" of difference between two decoys for all features
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         
 ##### 3rd binning, angle
         for n in range(10):
-            gi = np.array([ii[0]], dtype=int)                                      # add top-scoring decoy to diversified subset?
+            gi = np.array([ii[0]], dtype=int)                                      # add top-scoring decoy to diversified subset
             for i in ii[1:]:                                                       # for every filtered decoy
                 a0 = np.arccos(np.clip(np.abs(np.dot(vs[0][gi], vs[0][i])), 0, 1))
                 a1 = np.arccos(np.clip(np.abs(np.dot(vs[1][gi], vs[1][i])), 0, 1))
