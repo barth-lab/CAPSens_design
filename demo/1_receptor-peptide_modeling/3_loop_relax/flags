@@ -16,6 +16,6 @@
 
 -cst_file input/CXCR4_from_4XT1_alt_SSBOND.cst
 -cst_weight 1.0
--cst_fa_file input/CXCR4_from_4XT1_alt_SSBOND.cst
+-cst_fa_file input/CXCR4_from_4XT1_alt_SSBOND.fa.cst
 -cst_fa_weight 1.0
 
