@@ -142,8 +142,16 @@ The models that best reflect experimentally validated shifts in activity are re-
 In the case of CXCR4:CXCL12, a single constraint was used to anchor a key electrostatic interaction in the depth of the binding pocket. The demo redocks the V3Y variant peptide onto Cdyn. To fully explore the possible landscape in the mutant context, one should prep inputs with `pep_grid.py` and prepack before a production run.
 
 ```
-cd demo/3_model_refinement
-sbatch run.flexpep.ex12aro.cst.lr.hr.array CXCR4-SDF1.4xt1_TM2-ECL2.4rws_c7.1_eq_rpk_L15I-H87N-S152A-V280Y_pp.pdb CXCR4-SDF1_E262-K278
+cd demo/3_model_refinement/prep
+$CAPSen_scripts/pep_grid.py CXCR4-SDF1.4xt1_TM2-ECL2.4rws_L15I-H87N-S152A-V280Y.pdb
+for n in {0..116}; do
+    printf -v sn "%03d" $n
+    $ROS/source/bin/FlexPepDocking.linuxgccrelease -in:file:spanfile ../input/CXCR4_SDF1.span -database $ROS/database/ -s $sn.pdb -flexpep_prepack -ex1 -ex2aro -nstruct 1 -suffix "_pp" -no_nstruct_label > log_$sn 2> err_$sn &
+done
+mkdir ../input/grid
+cp *_pp.pdb ../input/grid
+cd ..
+sbatch refine_ar.cst.slurm CXCR4-SDF1.4xt1_TM2-ECL2.4rws_c7.1_eq_rpk_L15I-H87N-S152A-V280Y_pp.pdb CXCR4-SDF1_E262-K278
 ```
 
 Output decoys can be clustered and selected as before, before being repacked into other mutational contexts for which there is experimental validation to again screen models that best support the observed signaling effects.
