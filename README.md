@@ -151,7 +151,7 @@ done
 mkdir ../input/grid
 cp *_pp.pdb ../input/grid
 cd ..
-sbatch refine_ar.cst.slurm CXCR4-SDF1.4xt1_TM2-ECL2.4rws_c7.1_eq_rpk_L15I-H87N-S152A-V280Y_pp.pdb CXCR4-SDF1_E262-K278
+sbatch refine_ar.cst.slurm
 ```
 
 Output decoys can be clustered and selected as before, before being repacked into other mutational contexts for which there is experimental validation to again screen models that best support the observed signaling effects.

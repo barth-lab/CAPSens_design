@@ -9,7 +9,7 @@
 R="/work/upbarth/Programs/rosetta"
 
 I=input
-O=output_flex.$2
+O=output_refine
 
 if [ ${SLURM_ARRAY_TASK_ID} -eq 1 ]
 then
