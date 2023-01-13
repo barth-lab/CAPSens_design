@@ -128,7 +128,7 @@ Designable sites are identified on both the peptide and receptor sides of the di
 The demo inputs allow design at three positions in CXCR4. To run the demo simulation:
 ```
 cd demo/2_design
-sbatch sim_EnsembleState1_WT_rpk_N11A-Y19A-S259A.sh
+sbatch run.MP.design_mm.array EnsembleState1_Cdyn-V3Y_pikaa.resfile
 ```
 
 ## Computational design maintaining conformational dynamism

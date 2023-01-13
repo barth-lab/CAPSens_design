@@ -1,0 +1,49 @@
+#!/bin/bash
+#SBATCH --time 2:20:00 -n 1
+#SBATCH --array=1-2
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=36
+#SBATCH --output slurm.out
+#SBATCH --error slurm.err
+
+#sbatch run.MP.design_mm.array <resfile>
+
+echo STARTING AT `date`
+export LD_LIBRARY_PATH="/work/upbarth/Programs/rosetta/source/build/external/release/linux/3.10/64/x86/gcc/7.4/default/:$LD_LIBRARY_PATH"
+
+R="/work/upbarth/Programs/rosetta/"
+
+O=out.es1.MP.design_mm.${1/.resfile/}
+mkdir $O
+
+declare -a commands
+
+for i in {1..2}; do
+    printf -v si "%02d" $((i-1))
+    commands[$i]=""
+    for j in {1..36}; do
+	printf -v sj "%02d" $j
+	commands[$i]="${commands[$i]}
+          $R/source/bin/relax.linuxgccrelease \
+          -database $R/database/ \
+          -s input/EnsembleState1_WT_rpk.pdb \
+          -native input/EnsembleState1_WT_rpk.pdb \
+          -in:file:spanfile input/EnsembleState.span \
+          -membrane:no_interpolate_Mpair \
+          -membrane:Menv_penalties \
+          -score:weights membrane_highres_Menv_smooth.wts \
+          -nstruct 3 \
+          -in:file:movemap input/EnsembleState1_move.map \
+          -relax:respect_resfile \
+          -packing:resfile input/$1 \
+          -out:suffix _${si}_$sj \
+          -out:path:all $O \
+          >$O/log_${si}_$sj 2>$O/err_${si}_$sj &"
+    done
+    commands[$i]="${commands[$i]}
+      wait"
+done
+
+bash -c "${commands[${SLURM_ARRAY_TASK_ID}]}"
+
+echo FINISHED at `date`
