@@ -10,13 +10,19 @@ Requirements:
 * [Rosetta](https://new.rosettacommons.org/demos/latest/tutorials/install_build/install_build)
 * [biophysics](https://github.com/barth-lab/biophysics)
 
+The commands in the demo are for use with the Bash command line interface and can be used with any Linux operating system (tested with Ubuntu 22.04). The repository can be downloaded directly from Github.
+
+```
+git clone https://github.com/barth-lab/CAPSens_design.git
+```
+
 Aliases:
 ```
 export ROS=<path_to_rosetta>
 export CAPSen_scripts=<path_to_scripts>
 ```
 
-Many of the demo scripts work with the SLURM batch system for a high-performance computing cluster. You may need to modify them to work with your cluster.
+Many of the demo scripts work with the SLURM batch system (`sbatch` commands)for a high-performance computing cluster. You may need to modify them to work with your cluster. Allocated run times for production simulations are in the SBATCH header of the run scripts, but you may need to adjust based on your particular hardware.
 
 # Receptor:Peptide Complex Modeling
 
